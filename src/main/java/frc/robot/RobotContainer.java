@@ -41,7 +41,7 @@ public class RobotContainer {
   // The robot's subsystems and commands are defined here...
   private final Joystick drvJoy = new Joystick(0);
 
-  private final Drivetrain romiDrivetrain = new Drivetrain();
+  private final RomiDrivetrain romiDrivetrain = new RomiDrivetrain();
 
   //private final ExampleCommand m_autoCommand = new ExampleCommand(romiDrivetrain);
   //private final ChezzyDrive driveCommand = new ChezzyDrive(romiDrivetrain, drvJoy);

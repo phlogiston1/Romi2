@@ -105,7 +105,7 @@ public class RomiDrivetrain extends SubsystemBase {
   //   prevREr = rError;
   // }
 
-  public void voltageDrive(double lVolts, double rVolts){
+  public void tankDriveVolts(double lVolts, double rVolts){
     m_leftMotor.setVoltage(lVolts);
     m_rightMotor.setVoltage(-rVolts);
     dDrive.feed();
