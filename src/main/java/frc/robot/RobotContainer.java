@@ -17,9 +17,7 @@ import edu.wpi.first.wpilibj.trajectory.Trajectory;
 import edu.wpi.first.wpilibj.trajectory.TrajectoryConfig;
 import edu.wpi.first.wpilibj.trajectory.TrajectoryGenerator;
 import edu.wpi.first.wpilibj.trajectory.constraint.DifferentialDriveVoltageConstraint;
-import frc.robot.subsystems.Drivetrain;
 import frc.robot.commands.ChezzyDrive;
-import frc.robot.commands.ExampleCommand;
 import frc.robot.subsystems.RomiDrivetrain;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
@@ -44,13 +42,13 @@ public class RobotContainer {
   private final RomiDrivetrain romiDrivetrain = new RomiDrivetrain();
 
   //private final ExampleCommand m_autoCommand = new ExampleCommand(romiDrivetrain);
-  //private final ChezzyDrive driveCommand = new ChezzyDrive(romiDrivetrain, drvJoy);
+  private final ChezzyDrive driveCommand = new ChezzyDrive(romiDrivetrain, drvJoy);
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
     // Configure the button bindings
     configureButtonBindings();
-    //romiDrivetrain.setDefaultCommand(driveCommand);
+    romiDrivetrain.setDefaultCommand(driveCommand);
   }
 
 /**

@@ -7,6 +7,7 @@ package frc.robot.subsystems;
 import edu.wpi.first.wpilibj.BuiltInAccelerometer;
 import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj.Spark;
+import edu.wpi.first.wpilibj.Ultrasonic.Unit;
 import edu.wpi.first.wpilibj.controller.PIDController;
 import edu.wpi.first.wpilibj.controller.SimpleMotorFeedforward;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
@@ -48,8 +49,8 @@ public class RomiDrivetrain extends SubsystemBase {
     // Use inches as unit for encoder distances
     m_leftEncoder.setDistancePerPulse((Math.PI * kWheelDiameterMeter) / kCountsPerRevolution);
     m_rightEncoder.setDistancePerPulse((Math.PI * kWheelDiameterMeter) / kCountsPerRevolution);
-    // m_leftMotor.enableDeadbandElimination(true);
-    // m_rightMotor.enableDeadbandElimination(true);
+    m_leftMotor.enableDeadbandElimination(true);
+    m_rightMotor.enableDeadbandElimination(true);
     resetEncoders();
 
     odometry = new DifferentialDriveOdometry(gyro.getHeading());
@@ -63,17 +64,17 @@ public class RomiDrivetrain extends SubsystemBase {
   public void arcadeDrive(double speed, double turn) {
     velocityDrive((speed - turn)*20,(speed + turn)*20);
   }
-  private SimpleMotorFeedforward leftFeedforward = new SimpleMotorFeedforward(ksVolts,kvVoltSecondsPerMeter,kaVoltSecondsSquaredPerMeter);
-  private SimpleMotorFeedforward rightFeedforward = new SimpleMotorFeedforward(ksVolts,kvVoltSecondsPerMeter,kaVoltSecondsSquaredPerMeter);
+  private SimpleMotorFeedforward leftFeedforward = new SimpleMotorFeedforward(DRIVETRAIN_KS,DRIVETRAIN_KV,DRIVETRAIN_KA);
+  private SimpleMotorFeedforward rightFeedforward = new SimpleMotorFeedforward(DRIVETRAIN_KS,DRIVETRAIN_KV,DRIVETRAIN_KA);
   private PIDController lPidController = new PIDController(DRIVETRAIN_VEL_KP, DRIVETRAIN_VEL_KI, DRIVETRAIN_VEL_KD);
   private PIDController rPidController = new PIDController(DRIVETRAIN_VEL_KP, DRIVETRAIN_VEL_KI, DRIVETRAIN_VEL_KD);
   
   public void velocityDrive(double lSpeed, double rSpeed){
     
-    double lpid = lPidController.calculate(-getLeftVelocity(),lSpeed);
-    double lffd = leftFeedforward.calculate(-getLeftVelocity());
-    double rpid = rPidController.calculate(getRightVelocity(),rSpeed);
-    double rffd = rightFeedforward.calculate(getRightVelocity());
+    double lpid = lPidController.calculate(Units.metersToInches(-getLeftVelocity()),lSpeed);
+    double lffd = leftFeedforward.calculate(Units.metersToInches(-getLeftVelocity()));
+    double rpid = rPidController.calculate(Units.metersToInches(getRightVelocity()),rSpeed);
+    double rffd = rightFeedforward.calculate(Units.metersToInches(getRightVelocity()));
     
     SmartDashboard.putNumber("l velocity setpoint", lSpeed);
     SmartDashboard.putNumber("r velocity setpoint", rSpeed);
@@ -86,24 +87,24 @@ public class RomiDrivetrain extends SubsystemBase {
   double kP = DRIVETRAIN_POS_KP, kI = DRIVETRAIN_POS_KI, kD = DRIVETRAIN_POS_KD;
   double li = 0, ri = 0;
   double prevREr = 0, prevLEr = 0;
-  // public void positionDrive(double leftPosition, double rightPosition){
-  //   double lError = getLeftDistanceInch() - leftPosition;
-  //   double rError = getRightDistanceInch() - rightPosition;
+  public void positionDrive(double leftPosition, double rightPosition){
+    double lError = Units.metersToInches(getLeftDistanceMeter()) - leftPosition;
+    double rError = Units.metersToInches(getRightDistanceMeter()) - rightPosition;
 
-  //   double lp = kP * lError;
-  //   double rp = kP * rError;
+    double lp = kP * lError;
+    double rp = kP * rError;
 
-  //   li += kI;
-  //   ri += kI;
+    li += kI;
+    ri += kI;
 
-  //   double ld = (lError - prevLEr) * kD;
-  //   double rd = (prevREr - rError) * kD;
+    double ld = (lError - prevLEr) * kD;
+    double rd = (prevREr - rError) * kD;
 
-  //   tankDrive(-(lp + li + ld), rp + ri + rd);
+    tankDrive(-(lp + li + ld), rp + ri + rd);
 
-  //   prevLEr = lError;
-  //   prevREr = rError;
-  // }
+    prevLEr = lError;
+    prevREr = rError;
+  }
 
   public void tankDriveVolts(double lVolts, double rVolts){
     m_leftMotor.setVoltage(lVolts);
@@ -117,27 +118,27 @@ public class RomiDrivetrain extends SubsystemBase {
   }
 
 
-  // private static final double backlashCorrectionDistance = 0.0075; //meters
-  // private double backlashCorrectionCurrentRange = 0;
-  // private boolean backlashDirection = true; //true = val > prev val.
-  // private boolean correcting = false;
-  // private double correctBacklash(double position, double prevPosition) {
+  private static final double backlashCorrectionDistance = 0.0075; //meters
+  private double backlashCorrectionCurrentRange = 0;
+  private boolean backlashDirection = true; //true = val > prev val.
+  private boolean correcting = false;
+  private double correctBacklash(double position, double prevPosition) {
 
-  //   boolean newBacklashDirection = backlashDirection;
-  //   if(position != prevPosition) newBacklashDirection = position > prevPosition;
-  //   SmartDashboard.putBoolean("bd", newBacklashDirection);
-  //   if(newBacklashDirection != backlashDirection) {
-  //     correcting = true;
-  //     backlashCorrectionCurrentRange = 0;
-  //   }
-  //   if(backlashCorrectionCurrentRange > backlashCorrectionDistance) correcting = false;
-  //   SmartDashboard.putBoolean("ct", correcting);
-  //   if(correcting){
-  //     backlashCorrectionCurrentRange += Math.abs(position - prevPosition);
-  //   }
-  //   backlashDirection = newBacklashDirection;
-  //   return backlashDirection ? position + backlashCorrectionCurrentRange : position - backlashCorrectionCurrentRange;
-  // }
+    boolean newBacklashDirection = backlashDirection;
+    if(position != prevPosition) newBacklashDirection = position > prevPosition;
+    SmartDashboard.putBoolean("bd", newBacklashDirection);
+    if(newBacklashDirection != backlashDirection) {
+      correcting = true;
+      backlashCorrectionCurrentRange = 0;
+    }
+    if(backlashCorrectionCurrentRange > backlashCorrectionDistance) correcting = false;
+    SmartDashboard.putBoolean("ct", correcting);
+    if(correcting){
+      backlashCorrectionCurrentRange += Math.abs(position - prevPosition);
+    }
+    backlashDirection = newBacklashDirection;
+    return backlashDirection ? position + backlashCorrectionCurrentRange : position - backlashCorrectionCurrentRange;
+  }
 
   
   public double getLeftDistanceMeter() {
